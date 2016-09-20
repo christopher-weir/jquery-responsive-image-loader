@@ -6,96 +6,91 @@
 // eslint-disable-next-line
 ;( function ( $, window, document ) {
 
-    // Create the defaults once
     var pluginName = 'ilnImageLoader';
+    var currentView = null;
     var defaults = {
         breakpoint: 300,
         currentView: 'mobile'
     };
-    var breakpoint = null;
-    var currentView = null;
 
-    var imageSmall = null;
-    var imageLarge = null;
 
-    var elm = null;
+    function validateOptions( _options ) {
+
+        if ( !_options.imageSmall ) {
+            $.error( 'Please provide a small image' );
+        }
+
+        if ( !_options.imageLarge ) {
+            $.error( 'Please provide a large image' );
+        }
+
+        return true;
+    }
 
     // The actual plugin constructor
     function Plugin( element, options ) {
+        var _this = this;
+        _this.element = element;
 
-        this.element = element;
-        elm = element;
+        _this.options = $.extend( {}, defaults, options );
 
-        this.options = $.extend( {}, defaults, options );
+        validateOptions( _this.options );
 
-        breakpoint = this.options.breakpoint;
+        _this._defaults = defaults;
+        _this._name = pluginName;
 
-        imageSmall = this.options.imageSmall;
-        imageLarge = this.options.imageLarge;
-
-        this._defaults = defaults;
-        this._name = pluginName;
-
-        this.init();
-    }
-
-
-    // return if is mobile or not
-    function isMobile() {
-        return $( window ).width() <= breakpoint;
-    }
-
-
-    function loadImage( _img ) {
-
-        var img = new Image();
-
-        var loaded = function() {
-            elm.src = _img;
+        _this.isMobile = function() {
+            return $( window ).width() <= _this.options.breakpoint;
         };
 
-        img.addEventListener( 'load', loaded, false );
-        img.src = _img;
-    }
+        _this.loadImage = function( _img ) {
 
+            var img = new Image();
 
-    function resize() {
-        if ( isMobile() ) {
-            if( currentView === 'desktop' ) {
-                loadImage( imageSmall );
-                currentView = 'mobile';
+            var loaded = function() {
+                _this.element.src = _img;
+            };
+
+            img.addEventListener( 'load', loaded, false );
+            img.src = _img;
+        };
+
+        _this.resize = function() {
+
+            if ( _this.isMobile() ) {
+                if( currentView === 'desktop' ) {
+                    _this.loadImage( _this.options.imageSmall );
+                    currentView = 'mobile';
+                }
+                return;
             }
-            return;
-        }
-        if( currentView === 'mobile' ) {
-            loadImage( imageLarge );
-            currentView = 'desktop';
-        }
-    }
+            if( currentView === 'mobile' ) {
+                _this.loadImage( _this.options.imageLarge );
+                currentView = 'desktop';
+            }
+        };
 
-
-    function validateOptions() {
-        // $.error( 'now' );
-        return true;
+        _this.init();
     }
 
     Plugin.prototype = {
 
         init: function() {
-            validateOptions();
 
-            if( isMobile() ) {
+            var _this = this;
+
+            if( _this.isMobile() ) {
                 currentView = 'mobile';
-                loadImage( imageSmall );
+                _this.loadImage( _this.options.imageSmall );
             }
             else {
                 currentView = 'desktop';
-                loadImage( imageLarge );
+                _this.loadImage( _this.options.imageLarge );
             }
 
 
             $( window ).resize( function() {
-                resize();
+                _this.resize();
             } );
         }
     };
