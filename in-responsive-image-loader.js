@@ -8,8 +8,10 @@
 
     var pluginName = 'ilnImageLoader';
     var currentView = null;
+    var firstLoad = true;
     var defaults = {
         breakpoint: 300,
+        speed: 400,
         currentView: 'mobile'
     };
 
@@ -49,6 +51,10 @@
 
             var loaded = function() {
                 _this.element.src = _img;
+                if ( firstLoad ) {
+                    firstLoad = false;
+                    $( _this.element ).fadeIn( _this.options.speed );
+                }
             };
 
             img.addEventListener( 'load', loaded, false );
