@@ -7,8 +7,6 @@
 ;( function ( $, window, document ) {
 
     var pluginName = 'ilnImageLoader';
-    var currentView = null;
-    var firstLoad = true;
     var defaults = {
         breakpoint: 300,
         speed: 400,
@@ -18,42 +16,49 @@
 
     function validateOptions( _options ) {
 
-        if ( !_options.imageSmall ) {
+        if ( !_options.lores ) {
             $.error( 'Please provide a small image' );
         }
 
-        if ( !_options.imageLarge ) {
+        if ( !_options.hires ) {
             $.error( 'Please provide a large image' );
         }
 
-        return true;
+        return _options;
     }
 
     // The actual plugin constructor
-    function Plugin( element, options ) {
-        var _this = this;
-        _this.element = element;
+    function Plugin( element ) {
 
-        _this.options = $.extend( {}, defaults, options );
+        var plugin = this;
 
-        validateOptions( _this.options );
+        var firstLoad = true;
+        var _data = $( element ).data();
 
-        _this._defaults = defaults;
-        _this._name = pluginName;
+        plugin.options = $.extend( {}, defaults, validateOptions( _data ) );
 
-        _this.isMobile = function() {
-            return $( window ).width() <= _this.options.breakpoint;
+        plugin.element = element;
+        plugin.currentView = null;
+        plugin._defaults = defaults;
+        plugin._name = pluginName;
+
+
+        plugin.isMobile = function() {
+            return $( window ).width() <= this.options.breakpoint;
         };
 
-        _this.loadImage = function( _img ) {
+
+        plugin.loadImage = function( _img ) {
 
             var img = new Image();
+            var speed = this.options.speed;
+            var elm = this.element;
 
             var loaded = function() {
-                _this.element.src = _img;
+                elm.src = _img;
                 if ( firstLoad ) {
                     firstLoad = false;
-                    $( _this.element ).fadeIn( _this.options.speed );
+                    $( elm ).fadeIn( speed );
                 }
             };
 
@@ -61,22 +66,23 @@
             img.src = _img;
         };
 
-        _this.resize = function() {
 
-            if ( _this.isMobile() ) {
-                if( currentView === 'desktop' ) {
-                    _this.loadImage( _this.options.imageSmall );
-                    currentView = 'mobile';
+        plugin.resize = function() {
+
+            if ( this.isMobile() ) {
+                if( this.currentView === 'desktop' ) {
+                    this.loadImage( this.options.lores );
+                    this.currentView = 'mobile';
                 }
                 return;
             }
-            if( currentView === 'mobile' ) {
-                _this.loadImage( _this.options.imageLarge );
-                currentView = 'desktop';
+            if( this.currentView === 'mobile' ) {
+                this.loadImage( this.options.hires );
+                this.currentView = 'desktop';
             }
         };
 
-        _this.init();
+        plugin.init();
     }
 
     Plugin.prototype = {
@@ -86,12 +92,12 @@
             var _this = this;
 
             if( _this.isMobile() ) {
-                currentView = 'mobile';
-                _this.loadImage( _this.options.imageSmall );
+                _this.currentView = 'mobile';
+                _this.loadImage( _this.options.lores );
             }
             else {
-                currentView = 'desktop';
-                _this.loadImage( _this.options.imageLarge );
+                _this.currentView = 'desktop';
+                _this.loadImage( _this.options.hires );
             }
 
 
